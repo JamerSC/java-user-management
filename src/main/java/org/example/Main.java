@@ -3,9 +3,10 @@ package org.example;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.scene.Scene;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.example.dao.UserDAO;
 import org.example.database.DatabaseConnection;
@@ -17,27 +18,29 @@ import java.util.List;
 
 public class Main extends Application {
 
+    private final UserService userService =
+            new UserService(new UserDAO());
+
+    private final TableView<User> tableView =
+            new TableView<>();
+
+    private final TextField nameField =
+            new TextField();
+
+    private final TextField emailField =
+            new TextField();
+
+
     @Override
-    public void start(Stage stage) throws Exception {
-//        stage.setTitle("JavaFX Application");
-//        stage.setTitle("User Management System");
-//        stage.show();
+    public void start(Stage stage) {
 
         stage.setTitle("User Management System");
 
-        // 1. Create Service
-        UserService userService =
-                new UserService(new org.example.dao.UserDAO());
 
-        // 2. Get users from database
-        List<User> users =
-                userService.getAllUsers();
+        // ==========================================
+        // TABLE
+        // ==========================================
 
-        // 3. Create TableView
-        TableView<User> tableView =
-                new TableView<>();
-
-        // 4. ID Column
         TableColumn<User, Integer> idColumn =
                 new TableColumn<>("ID");
 
@@ -45,7 +48,7 @@ public class Main extends Application {
                 new PropertyValueFactory<>("id")
         );
 
-        // 5. Name Column
+
         TableColumn<User, String> nameColumn =
                 new TableColumn<>("Name");
 
@@ -53,7 +56,7 @@ public class Main extends Application {
                 new PropertyValueFactory<>("name")
         );
 
-        // 6. Email Column
+
         TableColumn<User, String> emailColumn =
                 new TableColumn<>("Email");
 
@@ -61,39 +64,355 @@ public class Main extends Application {
                 new PropertyValueFactory<>("email")
         );
 
-        // 7. Add columns
+
         tableView.getColumns().addAll(
                 idColumn,
                 nameColumn,
                 emailColumn
         );
 
-        // 8. Add database data to table
+
+        // ==========================================
+        // INPUT FIELDS
+        // ==========================================
+
+        nameField.setPromptText("Name");
+        emailField.setPromptText("Email");
+
+
+        // ==========================================
+        // BUTTONS
+        // ==========================================
+
+        Button addButton =
+                new Button("Add User");
+
+        Button updateButton =
+                new Button("Update");
+
+        Button deleteButton =
+                new Button("Delete");
+
+
+        // ==========================================
+        // BUTTON ACTIONS
+        // ==========================================
+
+        addButton.setOnAction(event -> addUser());
+
+        updateButton.setOnAction(event -> updateUser());
+
+        deleteButton.setOnAction(event -> deleteUser());
+
+
+        // ==========================================
+        // TABLE SELECTION
+        // ==========================================
+
+        tableView.getSelectionModel()
+                .selectedItemProperty()
+                .addListener((observable, oldUser, selectedUser) -> {
+
+                    if (selectedUser != null) {
+
+                        nameField.setText(
+                                selectedUser.getName()
+                        );
+
+                        emailField.setText(
+                                selectedUser.getEmail()
+                        );
+                    }
+                });
+
+
+        // ==========================================
+        // LAYOUT
+        // ==========================================
+
+        HBox inputBox =
+                new HBox(
+                        10,
+                        nameField,
+                        emailField
+                );
+
+
+        HBox buttonBox =
+                new HBox(
+                        10,
+                        addButton,
+                        updateButton,
+                        deleteButton
+                );
+
+
+        VBox root =
+                new VBox(
+                        10,
+                        inputBox,
+                        buttonBox,
+                        tableView
+                );
+
+
+        // ==========================================
+        // SCENE
+        // ==========================================
+
+        Scene scene =
+                new Scene(root, 700, 500);
+
+        stage.setScene(scene);
+
+        stage.show();
+
+
+        // ==========================================
+        // LOAD USERS
+        // ==========================================
+
+        loadUsers();
+    }
+
+
+    // ==========================================
+    // READ
+    // ==========================================
+
+    private void loadUsers() {
+
+        List<User> users =
+                userService.getAllUsers();
+
         tableView.setItems(
                 FXCollections.observableArrayList(users)
         );
-
-        // 9. Create Scene
-        Scene scene = new Scene(
-                tableView,
-                600,
-                400
-        );
-
-        // 10. Set Scene
-        stage.setScene(scene);
-
-        // 11. Show window
-        stage.show();
     }
 
-//     Main class variables
-//    String name = "Jane Doe";
+
+    // ==========================================
+    // CREATE
+    // ==========================================
+
+    private void addUser() {
+
+        String name =
+                nameField.getText();
+
+        String email =
+                emailField.getText();
+
+
+        try {
+
+            userService.createUser(
+                    name,
+                    email
+            );
+
+
+            showMessage(
+                    "Success",
+                    "User created successfully!"
+            );
+
+
+            clearFields();
+
+            loadUsers();
+
+
+        } catch (Exception e) {
+
+            showMessage(
+                    "Error",
+                    e.getMessage()
+            );
+        }
+    }
+
+
+    // ==========================================
+    // UPDATE
+    // ==========================================
+
+    private void updateUser() {
+
+        User selectedUser =
+                tableView.getSelectionModel()
+                        .getSelectedItem();
+
+
+        if (selectedUser == null) {
+
+            showMessage(
+                    "Warning",
+                    "Please select a user."
+            );
+
+            return;
+        }
+
+
+        String name =
+                nameField.getText();
+
+        String email =
+                emailField.getText();
+
+
+        try {
+
+            userService.updateUser(
+                    selectedUser.getId(),
+                    name,
+                    email
+            );
+
+
+            showMessage(
+                    "Success",
+                    "User updated successfully!"
+            );
+
+
+            clearFields();
+
+            loadUsers();
+
+
+        } catch (Exception e) {
+
+            showMessage(
+                    "Error",
+                    e.getMessage()
+            );
+        }
+    }
+
+
+    // ==========================================
+    // DELETE
+    // ==========================================
+
+    private void deleteUser() {
+
+        User selectedUser =
+                tableView.getSelectionModel()
+                        .getSelectedItem();
+
+
+        if (selectedUser == null) {
+
+            showMessage(
+                    "Warning",
+                    "Please select a user."
+            );
+
+            return;
+        }
+
+
+        Alert confirmation =
+                new Alert(
+                        Alert.AlertType.CONFIRMATION
+                );
+
+
+        confirmation.setTitle(
+                "Delete User"
+        );
+
+        confirmation.setHeaderText(
+                "Delete selected user?"
+        );
+
+        confirmation.setContentText(
+                "User: "
+                        + selectedUser.getName()
+        );
+
+
+        if (
+                confirmation.showAndWait()
+                        .orElse(ButtonType.CANCEL)
+                        == ButtonType.OK
+        ) {
+
+            try {
+
+                userService.deleteUserById(
+                        selectedUser.getId()
+                );
+
+
+                showMessage(
+                        "Success",
+                        "User deleted successfully!"
+                );
+
+
+                clearFields();
+
+                loadUsers();
+
+
+            } catch (Exception e) {
+
+                showMessage(
+                        "Error",
+                        e.getMessage()
+                );
+            }
+        }
+    }
+
+
+    // ==========================================
+    // CLEAR FORM
+    // ==========================================
+
+    private void clearFields() {
+
+        nameField.clear();
+
+        emailField.clear();
+
+        tableView
+                .getSelectionModel()
+                .clearSelection();
+    }
+
+
+    // ==========================================
+    // MESSAGE
+    // ==========================================
+
+    private void showMessage(
+            String title,
+            String message
+    ) {
+
+        Alert alert =
+                new Alert(
+                        Alert.AlertType.INFORMATION
+                );
+
+        alert.setTitle(title);
+
+        alert.setHeaderText(null);
+
+        alert.setContentText(message);
+
+        alert.showAndWait();
+    }
+
 
     public static void main(String[] args) {
 
         launch(args);
-
+    }
 //        UserService userService = new UserService(new org.example.dao.UserDAO());
 
 //        ✅ CREATE USER
@@ -148,38 +467,4 @@ public class Main extends Application {
 //            e.printStackTrace();
 //        }
 
-
-    }
-
-//     Main class methods
-    public void makeItLowerCase(String x) {
-        System.out.println(x.toLowerCase());
-    }
-
-//    public String makeItLowerCase() {
-//        return name.toLowerCase();
-//    }
-
-    public static void makeItUpperCase(String lastName) {
-        System.out.println(lastName.toUpperCase());
-    }
 }
-
-
-
-//        Main myObject = new Main();
-//        System.out.println(myObject.name);
-//        makeItUpperCase(myObject.name);
-//        myObject.makeItLowerCase(myObject.name);
-//        System.out.println(myObject.makeItLowerCase());
-
-//        Person person1 = new Person("John", "Doe", 'M', 30);
-//        Person person2 = new Person("Mary", "Public", 'F', 17);
-//        System.out.println(person1.toString());
-
-//        Person person3 = new Person("Alice", "Smith", 'F', 25);
-//        person3.setLastName("Johnson");
-//        makeItUpperCase(person3.getLastName());
-//        person3.greet();
-//        System.out.println(person3.getLastName());
-//        System.out.println(person3.getFullName());
