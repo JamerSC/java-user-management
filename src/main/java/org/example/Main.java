@@ -1,5 +1,13 @@
 package org.example;
 
+import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.scene.Scene;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Stage;
+import org.example.dao.UserDAO;
 import org.example.database.DatabaseConnection;
 import org.example.model.User;
 import org.example.service.UserService;
@@ -7,14 +15,86 @@ import org.example.service.UserService;
 import java.sql.Connection;
 import java.util.List;
 
-public class Main {
+public class Main extends Application {
+
+    @Override
+    public void start(Stage stage) throws Exception {
+//        stage.setTitle("JavaFX Application");
+//        stage.setTitle("User Management System");
+//        stage.show();
+
+        stage.setTitle("User Management System");
+
+        // 1. Create Service
+        UserService userService =
+                new UserService(new org.example.dao.UserDAO());
+
+        // 2. Get users from database
+        List<User> users =
+                userService.getAllUsers();
+
+        // 3. Create TableView
+        TableView<User> tableView =
+                new TableView<>();
+
+        // 4. ID Column
+        TableColumn<User, Integer> idColumn =
+                new TableColumn<>("ID");
+
+        idColumn.setCellValueFactory(
+                new PropertyValueFactory<>("id")
+        );
+
+        // 5. Name Column
+        TableColumn<User, String> nameColumn =
+                new TableColumn<>("Name");
+
+        nameColumn.setCellValueFactory(
+                new PropertyValueFactory<>("name")
+        );
+
+        // 6. Email Column
+        TableColumn<User, String> emailColumn =
+                new TableColumn<>("Email");
+
+        emailColumn.setCellValueFactory(
+                new PropertyValueFactory<>("email")
+        );
+
+        // 7. Add columns
+        tableView.getColumns().addAll(
+                idColumn,
+                nameColumn,
+                emailColumn
+        );
+
+        // 8. Add database data to table
+        tableView.setItems(
+                FXCollections.observableArrayList(users)
+        );
+
+        // 9. Create Scene
+        Scene scene = new Scene(
+                tableView,
+                600,
+                400
+        );
+
+        // 10. Set Scene
+        stage.setScene(scene);
+
+        // 11. Show window
+        stage.show();
+    }
 
 //     Main class variables
 //    String name = "Jane Doe";
 
     public static void main(String[] args) {
 
-        UserService userService = new UserService(new org.example.dao.UserDAO());
+        launch(args);
+
+//        UserService userService = new UserService(new org.example.dao.UserDAO());
 
 //        ✅ CREATE USER
 //        userService.createUser(
@@ -23,8 +103,8 @@ public class Main {
 //        );
 
 //        ✅ READ ALL
-        List<User> users = userService.getAllUsers();
-
+//        List<User> users = userService.getAllUsers();
+//
 //        for (User user : users) {
 //            System.out.println(user);
 //        }
@@ -34,7 +114,7 @@ public class Main {
 //        users.forEach(user -> System.out.println(user));
 
         // Approach B: Using a compact method reference
-        users.forEach(System.out::println);
+//        users.forEach(System.out::println);
 
 
 //      ✅ FIND ONE
