@@ -17,11 +17,11 @@ public class UserDAO {
         String sql =
                 "INSERT INTO users (name, email) VALUES (?,?)";
 
-        try {
-            Connection connection = DatabaseConnection.getConnection();
-
-            PreparedStatement statement = connection.prepareStatement(sql);
-
+        try (
+                Connection connection = DatabaseConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+            )
+        {
             statement.setString(1, user.getName());
             statement.setString(2, user.getEmail());
 
@@ -42,10 +42,11 @@ public class UserDAO {
         String sql =
                 "SELECT id, name, email FROM users";
 
-        try {
-            Connection connection = DatabaseConnection.getConnection();
-
-            PreparedStatement statement = connection.prepareStatement(sql);
+        try (
+                Connection connection = DatabaseConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+            )
+        {
 
             ResultSet result = statement.executeQuery();
 
@@ -72,10 +73,11 @@ public class UserDAO {
         String sql =
                 "SELECT id, name, email FROM users WHERE id = ?";
 
-        try {
-            Connection connection = DatabaseConnection.getConnection();
-
-            PreparedStatement statement = connection.prepareStatement(sql);
+        try (
+                Connection connection = DatabaseConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+            )
+        {
 
             statement.setInt(1, id);
 
@@ -101,10 +103,11 @@ public class UserDAO {
         String sql =
                 "UPDATE users SET name = ?, email = ? WHERE id = ?";
 
-        try {
-            Connection connection = DatabaseConnection.getConnection();
-
-            PreparedStatement statement = connection.prepareStatement(sql);
+        try (
+                Connection connection = DatabaseConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+            )
+        {
 
             statement.setString(1, user.getName());
             statement.setString(2, user.getEmail());
@@ -125,10 +128,11 @@ public class UserDAO {
         String sql =
                 "DELETE FROM users WHERE id = ?";
 
-        try {
-            Connection connection = DatabaseConnection.getConnection();
-
-            PreparedStatement statement = connection.prepareStatement(sql);
+        try (
+                Connection connection = DatabaseConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+            )
+        {
 
             statement.setInt(1, id);
 
