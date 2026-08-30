@@ -1,10 +1,14 @@
 package org.example.ui;
 
 import javafx.collections.FXCollections;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import org.example.controller.AddUserModalController;
 import org.example.model.User;
 import org.example.service.UserService;
 
@@ -40,7 +44,8 @@ public class UserManagementUI {
         Button updateButton = new Button("Update");
         Button deleteButton = new Button("Delete");
 
-        addButton.setOnAction(event -> addUser());
+//        addButton.setOnAction(event -> addUser());
+        addButton.setOnAction(event -> openAddUserModal());
         updateButton.setOnAction(event -> updateUser());
         deleteButton.setOnAction(event -> deleteUser());
 
@@ -78,6 +83,25 @@ public class UserManagementUI {
             loadUsers();
         } catch (Exception e) {
             showMessage("Error", e.getMessage());
+        }
+    }
+
+    private void openAddUserModal() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/AddUserModal.fxml"));
+            VBox modalRoot = loader.load();
+
+            AddUserModalController controller = loader.getController();
+            controller.setUserService(userService);
+
+            Stage modalStage = new Stage();
+            modalStage.setTitle("Add New User");
+            modalStage.setScene(new Scene(modalRoot));
+            modalStage.showAndWait();
+
+            loadUsers(); // Refresh the table after adding a user
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
