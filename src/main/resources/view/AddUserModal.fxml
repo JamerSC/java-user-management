@@ -8,7 +8,8 @@
       fx:controller="org.example.controller.AddUserModalController"
       spacing="10" alignment="CENTER" prefWidth="300" prefHeight="200">
 
+    <TextField fx:id="idField" visible="false" />
     <TextField fx:id="nameField" promptText="Name" />
     <TextField fx:id="emailField" promptText="Email" />
-    <Button text="Add User" onAction="#handleAddUser" />
+    <Button text="Save User" onAction="#handleSaveUser" />
 </VBox>
