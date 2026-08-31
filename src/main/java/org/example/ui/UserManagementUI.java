@@ -20,14 +20,12 @@ public class UserManagementUI {
 
     private final UserService userService = new UserService(new org.example.dao.UserDAO());
     private final TableView<User> tableView = new TableView<>();
-    private final TextField nameField = new TextField();
-    private final TextField emailField = new TextField();
+//    private final TextField nameField = new TextField();
+//    private final TextField emailField = new TextField();
     private final VBox root;
 
     public UserManagementUI() {
         // Initialize UI components
-        nameField.setPromptText("Name");
-        emailField.setPromptText("Email");
 
         TableColumn<User, Integer> idColumn = new TableColumn<>("ID");
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -38,28 +36,17 @@ public class UserManagementUI {
         TableColumn<User, String> emailColumn = new TableColumn<>("Email");
         emailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
 
+
         tableView.getColumns().addAll(idColumn, nameColumn, emailColumn);
 
+        // Initialize action column
+        initializeActionColumn();
+
         Button addButton = new Button("Add User");
-        Button updateButton = new Button("Update");
-        Button deleteButton = new Button("Delete");
-
-//        addButton.setOnAction(event -> addUser());
         addButton.setOnAction(event -> openAddUserModal());
-        updateButton.setOnAction(event -> updateUser());
-        deleteButton.setOnAction(event -> deleteUser());
+        HBox buttonBox = new HBox(10, addButton);
 
-        tableView.getSelectionModel().selectedItemProperty().addListener((observable, oldUser, selectedUser) -> {
-            if (selectedUser != null) {
-                nameField.setText(selectedUser.getName());
-                emailField.setText(selectedUser.getEmail());
-            }
-        });
-
-        HBox inputBox = new HBox(10, nameField, emailField);
-        HBox buttonBox = new HBox(10, addButton, updateButton, deleteButton);
-
-        root = new VBox(10, inputBox, buttonBox, tableView);
+        root = new VBox(10, buttonBox, tableView);
 
         loadUsers();
     }
@@ -71,19 +58,6 @@ public class UserManagementUI {
     private void loadUsers() {
         List<User> users = userService.getAllUsers();
         tableView.setItems(FXCollections.observableArrayList(users));
-    }
-
-    private void addUser() {
-        String name = nameField.getText();
-        String email = emailField.getText();
-        try {
-            userService.createUser(name, email);
-            showMessage("Success", "User created successfully!");
-            clearFields();
-            loadUsers();
-        } catch (Exception e) {
-            showMessage("Error", e.getMessage());
-        }
     }
 
     private void openAddUserModal() {
@@ -105,19 +79,99 @@ public class UserManagementUI {
         }
     }
 
-    private void updateUser() {
+    private void initializeActionColumn() {
+        TableColumn<User, Void> actionColumn = new TableColumn<>("Actions");
+
+        actionColumn.setCellFactory(param -> new TableCell<>() {
+            private final Button editButton = new Button("Edit");
+            private final Button deleteButton = new Button("Delete");
+            private final HBox actionButtons = new HBox(10, editButton, deleteButton);
+
+            {
+                editButton.setOnAction(event -> {
+                    User user = getTableView().getItems().get(getIndex());
+                    openEditUserModal(user);
+                });
+
+                deleteButton.setOnAction(event -> {
+                    User user = getTableView().getItems().get(getIndex());
+                    deleteUser(user);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(actionButtons);
+                }
+            }
+        });
+
+        tableView.getColumns().add(actionColumn);
+    }
+
+    private void openEditUserModal(User user) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/AddUserModal.fxml"));
+            VBox modalRoot = loader.load();
+
+            AddUserModalController controller = loader.getController();
+            controller.setUserService(userService);
+            controller.setUser(user);
+
+            Stage modalStage = new Stage();
+            modalStage.setTitle("Edit User");
+            modalStage.setScene(new Scene(modalRoot));
+            modalStage.showAndWait();
+
+            loadUsers(); // Refresh the table after editing a user
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void deleteUser(User user) {
+        Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmation.setTitle("Delete User");
+        confirmation.setHeaderText("Delete selected user?");
+        confirmation.setContentText("User: " + user.getName());
+        if (confirmation.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+            try {
+                userService.deleteUserById(user.getId());
+                showMessage("Success", "User deleted successfully!");
+                loadUsers();
+            } catch (Exception e) {
+                showMessage("Error", e.getMessage());
+            }
+        }
+    }
+
+    private void openEditUserModal() {
         User selectedUser = tableView.getSelectionModel().getSelectedItem();
         if (selectedUser == null) {
-            showMessage("Warning", "Please select a user.");
+            showMessage("Warning", "Please select a user to edit.");
             return;
         }
+
         try {
-            userService.updateUser(selectedUser.getId(), nameField.getText(), emailField.getText());
-            showMessage("Success", "User updated successfully!");
-            clearFields();
-            loadUsers();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/AddUserModal.fxml"));
+            VBox modalRoot = loader.load();
+
+            AddUserModalController controller = loader.getController();
+            controller.setUserService(userService);
+            controller.setUser(selectedUser);
+
+            Stage modalStage = new Stage();
+            modalStage.setTitle("Edit User");
+            modalStage.setScene(new Scene(modalRoot));
+            modalStage.showAndWait();
+
+            loadUsers(); // Refresh the table after editing a user
         } catch (Exception e) {
-            showMessage("Error", e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -135,18 +189,12 @@ public class UserManagementUI {
             try {
                 userService.deleteUserById(selectedUser.getId());
                 showMessage("Success", "User deleted successfully!");
-                clearFields();
+//                clearFields();
                 loadUsers();
             } catch (Exception e) {
                 showMessage("Error", e.getMessage());
             }
         }
-    }
-
-    private void clearFields() {
-        nameField.clear();
-        emailField.clear();
-        tableView.getSelectionModel().clearSelection();
     }
 
     private void showMessage(String title, String message) {

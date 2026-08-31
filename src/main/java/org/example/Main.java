@@ -11,7 +11,7 @@ public class Main extends Application {
     public void start(Stage stage) {
         UserManagementUI userManagementUI = new UserManagementUI();
         Scene scene = new Scene(userManagementUI.getRoot(), 700, 500);
-        stage.setTitle("User Management System");
+        stage.setTitle("User Management");
         stage.setScene(scene);
         stage.show();
     }
