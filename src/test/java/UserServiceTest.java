@@ -4,8 +4,10 @@ import org.example.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class UserServiceTest {
@@ -69,5 +71,94 @@ public class UserServiceTest {
 //        }
 
         assertEquals("Name cannot be null or blank", exception.getMessage());
+    }
+
+    @Test
+    void getAllUsers_ShouldReturnListOfUsers() {
+        // Arrange
+        List<User> mockUsers = Arrays.asList(
+                new User(1, "John Doe", "john.doe@example.com"),
+                new User(2, "Jane Doe", "jane.doe@example.com")
+        );
+        when(userDAO.findAll()).thenReturn(mockUsers);
+
+        // Act
+        List<User> users = userService.getAllUsers();
+
+        // Assert
+        assertEquals(2, users.size());
+        assertEquals("John Doe", users.get(0).getName());
+        verify(userDAO, times(1)).findAll();
+    }
+
+    @Test
+    void getUserById_ShouldReturnUser_WhenUserExists() {
+        // Arrange
+        int userId = 1;
+        User mockUser = new User(userId, "John Doe", "john.doe@example.com");
+        when(userDAO.findById(userId)).thenReturn(mockUser);
+
+        // Act
+        User user = userService.getUserById(userId);
+
+        // Assert
+        assertNotNull(user);
+        assertEquals("John Doe", user.getName());
+        verify(userDAO, times(1)).findById(userId);
+    }
+
+    @Test
+    void getUserById_ShouldReturnNull_WhenUserDoesNotExist() {
+        // Arrange
+        int userId = 1;
+        when(userDAO.findById(userId)).thenReturn(null);
+
+        // Act
+        User user = userService.getUserById(userId);
+
+        // Assert
+        assertNull(user);
+        verify(userDAO, times(1)).findById(userId);
+    }
+
+    @Test
+    void updateUser_ShouldUpdateUser_WhenValidInput() {
+        // Arrange
+        int userId = 1;
+        String name = "Updated Name";
+        String email = "updated.email@example.com";
+
+        // Act
+        userService.updateUser(userId, name, email);
+
+        // Assert
+        verify(userDAO, times(1)).update(any(User.class));
+    }
+
+    @Test
+    void updateUser_ShouldThrowException_WhenNameIsBlank() {
+        // Arrange
+        int userId = 1;
+        String name = " ";
+        String email = "updated.email@example.com";
+
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.updateUser(userId, name, email);
+        });
+
+        assertEquals("Name cannot be null or blank", exception.getMessage());
+    }
+
+    @Test
+    void deleteUserById_ShouldDeleteUser_WhenUserExists() {
+        // Arrange
+        int userId = 1;
+
+        // Act
+        userService.deleteUserById(userId);
+
+        // Assert
+        verify(userDAO, times(1)).delete(userId);
     }
 }
