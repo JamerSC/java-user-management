@@ -3,6 +3,7 @@ package org.example.controller;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import org.example.dto.UserDto;
 import org.example.model.User;
 import org.example.service.UserService;
 
@@ -47,8 +48,8 @@ public class AddUserModalController {
                 userService.createUser(name, email);
             } else {
                 // Edit existing user
-                int id = Integer.parseInt(idText);
-                userService.updateUser(id, name, email);
+//                int id = Integer.parseInt(idText);
+                userService.updateUser(idText, name, email);
             }
             closeModal();
         } catch (Exception e) {
@@ -56,7 +57,7 @@ public class AddUserModalController {
         }
     }
 
-    public void setUser(User user) {
+    public void setUser(UserDto user) {
         if (user != null) {
             idField.setText(String.valueOf(user.getId()));
             nameField.setText(user.getName());

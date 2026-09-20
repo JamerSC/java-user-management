@@ -46,11 +46,9 @@ public class UserController {
     }
 
     public void loadUsers() {
-        List<User> users = userService.getAllUsers();
-        List<UserDto> userDtos = users.stream()
-                                        .map(UserMapper::toDto)
-                .toList();
-        tableView.setItems(FXCollections.observableArrayList(userDtos));
+        List<UserDto> users = userService.getAllUsers();
+
+        tableView.setItems(FXCollections.observableArrayList(users));
     }
 
     public void addUser() {

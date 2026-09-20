@@ -7,28 +7,29 @@ import javafx.beans.property.StringProperty;
 
 public class UserDto {
 
-    private final IntegerProperty id = new SimpleIntegerProperty();
+//    private final IntegerProperty id = new SimpleIntegerProperty();
+    private final StringProperty id = new SimpleStringProperty();
     private final StringProperty name = new SimpleStringProperty();
     private final StringProperty email = new SimpleStringProperty();
 
     public UserDto() {
     }
 
-    public UserDto(int id, String name, String email) {
+    public UserDto(String id, String name, String email) {
         this.id.set(id);
         this.name.set(name);
         this.email.set(email);
     }
 
-    public int getId() {
+    public String getId() {
         return id.get();
     }
 
-    public IntegerProperty idProperty() {
+    public StringProperty idProperty() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id.set(id);
     }
 
