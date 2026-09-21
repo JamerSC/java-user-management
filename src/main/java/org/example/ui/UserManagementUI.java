@@ -30,6 +30,7 @@ public class UserManagementUI {
 
         TableColumn<UserDto, String> idColumn = new TableColumn<>("ID");
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
+        idColumn.setVisible(false); // Hide the ID column
 
         TableColumn<UserDto, String> nameColumn = new TableColumn<>("Name");
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
