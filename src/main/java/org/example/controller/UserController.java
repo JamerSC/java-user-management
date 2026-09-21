@@ -7,6 +7,8 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import org.example.dao.UserDAO;
+import org.example.dto.UserDto;
+import org.example.mapper.UserMapper;
 import org.example.model.User;
 import org.example.service.UserService;
 
@@ -16,16 +18,16 @@ public class UserController {
 
 
     @FXML
-    private TableView<User> tableView;
+    private TableView<UserDto> tableView;
 
     @FXML
-    private TableColumn<User, Integer> idColumn;
+    private TableColumn<UserDto, Integer> idColumn;
 
     @FXML
-    private TableColumn<User, String> nameColumn;
+    private TableColumn<UserDto, String> nameColumn;
 
     @FXML
-    private TableColumn<User, String> emailColumn;
+    private TableColumn<UserDto, String> emailColumn;
 
     @FXML
     private TextField nameField;
@@ -44,7 +46,8 @@ public class UserController {
     }
 
     public void loadUsers() {
-        List<User> users = userService.getAllUsers();
+        List<UserDto> users = userService.getAllUsers();
+
         tableView.setItems(FXCollections.observableArrayList(users));
     }
 
@@ -56,7 +59,7 @@ public class UserController {
     }
 
     public void updateUser() {
-        User selectedUser = tableView.getSelectionModel().getSelectedItem();
+        UserDto selectedUser = tableView.getSelectionModel().getSelectedItem();
         if (selectedUser != null) {
             userService.updateUser(selectedUser.getId(), nameField.getText(), emailField.getText());
             loadUsers();
@@ -64,7 +67,7 @@ public class UserController {
     }
 
     public void deleteUser() {
-        User selectedUser = tableView.getSelectionModel().getSelectedItem();
+        UserDto selectedUser = tableView.getSelectionModel().getSelectedItem();
         if (selectedUser != null) {
             userService.deleteUserById(selectedUser.getId());
             loadUsers();

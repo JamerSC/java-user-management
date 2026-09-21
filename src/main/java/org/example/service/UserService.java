@@ -1,7 +1,10 @@
 package org.example.service;
 
 import org.example.dao.UserDAO;
+import org.example.dto.UserDto;
+import org.example.mapper.UserMapper;
 import org.example.model.User;
+import org.example.security.CryptoUtil;
 
 import java.util.List;
 
@@ -34,17 +37,33 @@ public class UserService {
     }
 
     // GET ALL USERS
-    public List<User> getAllUsers() {
-        return userDAO.findAll();
+    public List<UserDto> getAllUsers() {
+//        return userDAO.findAll();
+
+        List<User> users = userDAO.findAll();
+
+        return users.stream()
+                .map(UserMapper::toDto)
+                .toList();
     }
 
     // GET USER BY ID
-    public User getUserById(int id) {
+    public User getUserById(String encryptedId) {
+
+        int id = Integer.parseInt(
+                CryptoUtil.decrypt(encryptedId)
+        );
+
         return userDAO.findById(id);
     }
 
     // UPDATE USER
-    public void updateUser(int id, String name, String email) {
+    public void updateUser(String encryptedId, String name, String email) {
+
+        int id = Integer.parseInt(
+                CryptoUtil.decrypt(encryptedId)
+        );
+
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException(
                     "Name cannot be null or blank"
@@ -63,7 +82,12 @@ public class UserService {
     }
 
     // DELETE USER BY ID
-    public void deleteUserById(int id) {
+    public void deleteUserById(String encryptedId) {
+
+        int id = Integer.parseInt(
+                CryptoUtil.decrypt(encryptedId)
+        );
+
         userDAO.delete(id);
     }
 }

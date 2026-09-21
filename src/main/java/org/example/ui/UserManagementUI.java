@@ -9,6 +9,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.example.controller.AddUserModalController;
+import org.example.dto.UserDto;
 import org.example.model.User;
 import org.example.service.UserService;
 
@@ -19,7 +20,7 @@ public class UserManagementUI {
 
 
     private final UserService userService = new UserService(new org.example.dao.UserDAO());
-    private final TableView<User> tableView = new TableView<>();
+    private final TableView<UserDto> tableView = new TableView<>();
 //    private final TextField nameField = new TextField();
 //    private final TextField emailField = new TextField();
     private final VBox root;
@@ -27,13 +28,14 @@ public class UserManagementUI {
     public UserManagementUI() {
         // Initialize UI components
 
-        TableColumn<User, Integer> idColumn = new TableColumn<>("ID");
+        TableColumn<UserDto, String> idColumn = new TableColumn<>("ID");
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
+        idColumn.setVisible(false); // Hide the ID column
 
-        TableColumn<User, String> nameColumn = new TableColumn<>("Name");
+        TableColumn<UserDto, String> nameColumn = new TableColumn<>("Name");
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
 
-        TableColumn<User, String> emailColumn = new TableColumn<>("Email");
+        TableColumn<UserDto, String> emailColumn = new TableColumn<>("Email");
         emailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
 
 
@@ -56,7 +58,7 @@ public class UserManagementUI {
     }
 
     private void loadUsers() {
-        List<User> users = userService.getAllUsers();
+        List<UserDto> users = userService.getAllUsers();
         tableView.setItems(FXCollections.observableArrayList(users));
     }
 
@@ -80,7 +82,7 @@ public class UserManagementUI {
     }
 
     private void initializeActionColumn() {
-        TableColumn<User, Void> actionColumn = new TableColumn<>("Actions");
+        TableColumn<UserDto, Void> actionColumn = new TableColumn<>("Actions");
 
         actionColumn.setCellFactory(param -> new TableCell<>() {
             private final Button editButton = new Button("Edit");
@@ -89,12 +91,12 @@ public class UserManagementUI {
 
             {
                 editButton.setOnAction(event -> {
-                    User user = getTableView().getItems().get(getIndex());
+                    UserDto user = getTableView().getItems().get(getIndex());
                     openEditUserModal(user);
                 });
 
                 deleteButton.setOnAction(event -> {
-                    User user = getTableView().getItems().get(getIndex());
+                    UserDto user = getTableView().getItems().get(getIndex());
                     deleteUser(user);
                 });
             }
@@ -113,14 +115,14 @@ public class UserManagementUI {
         tableView.getColumns().add(actionColumn);
     }
 
-    private void openEditUserModal(User user) {
+    private void openEditUserModal(UserDto dto) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/AddUserModal.fxml"));
             VBox modalRoot = loader.load();
 
             AddUserModalController controller = loader.getController();
             controller.setUserService(userService);
-            controller.setUser(user);
+            controller.setUser(dto);
 
             Stage modalStage = new Stage();
             modalStage.setTitle("Edit User");
@@ -133,14 +135,14 @@ public class UserManagementUI {
         }
     }
 
-    private void deleteUser(User user) {
+    private void deleteUser(UserDto dto) {
         Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
         confirmation.setTitle("Delete User");
         confirmation.setHeaderText("Delete selected user?");
-        confirmation.setContentText("User: " + user.getName());
+        confirmation.setContentText("User: " + dto.getName());
         if (confirmation.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
             try {
-                userService.deleteUserById(user.getId());
+                userService.deleteUserById(dto.getId());
                 showMessage("Success", "User deleted successfully!");
                 loadUsers();
             } catch (Exception e) {
@@ -150,7 +152,7 @@ public class UserManagementUI {
     }
 
     private void openEditUserModal() {
-        User selectedUser = tableView.getSelectionModel().getSelectedItem();
+        UserDto selectedUser = tableView.getSelectionModel().getSelectedItem();
         if (selectedUser == null) {
             showMessage("Warning", "Please select a user to edit.");
             return;
@@ -176,7 +178,7 @@ public class UserManagementUI {
     }
 
     private void deleteUser() {
-        User selectedUser = tableView.getSelectionModel().getSelectedItem();
+        UserDto selectedUser = tableView.getSelectionModel().getSelectedItem();
         if (selectedUser == null) {
             showMessage("Warning", "Please select a user.");
             return;
