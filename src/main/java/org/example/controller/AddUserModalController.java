@@ -1,6 +1,7 @@
 package org.example.controller;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.example.dto.UserDto;
@@ -15,26 +16,26 @@ public class AddUserModalController {
     @FXML
     private TextField emailField;
 
+    @FXML
+    private TextField idField;
+
     private UserService userService;
 
     public void setUserService(UserService userService) {
         this.userService = userService;
     }
 
-    @FXML
-    private void handleAddUser() {
-        String name = nameField.getText();
-        String email = emailField.getText();
-        try {
-            userService.createUser(name, email);
-            closeModal();
-        } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    private TextField idField;
+//    @FXML
+//    private void handleAddUser() {
+//        String name = nameField.getText();
+//        String email = emailField.getText();
+//        try {
+//            userService.createUser(name, email);
+//            closeModal();
+//        } catch (Exception e) {
+//            System.err.println("Error: " + e.getMessage());
+//        }
+//    }
 
     @FXML
     private void handleSaveUser() {
@@ -42,18 +43,21 @@ public class AddUserModalController {
         String name = nameField.getText();
         String email = emailField.getText();
 
+        if (!validateInput(name, email)) {
+            return; // Stop execution if validation fails
+        }
+
         try {
             if (idText == null || idText.isBlank()) {
                 // Add new user
                 userService.createUser(name, email);
             } else {
                 // Edit existing user
-//                int id = Integer.parseInt(idText);
                 userService.updateUser(idText, name, email);
             }
             closeModal();
         } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
+            showError("Error", "An error occurred: " + e.getMessage());
         }
     }
 
@@ -63,6 +67,31 @@ public class AddUserModalController {
             nameField.setText(user.getName());
             emailField.setText(user.getEmail());
         }
+    }
+
+    private boolean validateInput(String name, String email) {
+        if (name == null || name.isBlank()) {
+            showError("Validation Error", "Name cannot be empty.");
+            return false;
+        }
+        if (email == null || email.isBlank()) {
+            showError("Validation Error", "Email cannot be empty.");
+            return false;
+        }
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            showError("Validation Error", "Invalid email format.");
+            return false;
+        }
+        return true;
+    }
+
+
+    private void showError(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     private void closeModal() {
