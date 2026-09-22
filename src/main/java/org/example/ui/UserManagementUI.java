@@ -10,9 +10,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.example.controller.AddUserModalController;
 import org.example.dto.UserDto;
-import org.example.model.User;
 import org.example.service.UserService;
-
+import org.example.util.ExceptionHandler;
 
 import java.util.List;
 
@@ -77,7 +76,7 @@ public class UserManagementUI {
 
             loadUsers(); // Refresh the table after adding a user
         } catch (Exception e) {
-            e.printStackTrace();
+            ExceptionHandler.handleException(e, "Failed to load the user modal. Please try again.");
         }
     }
 
@@ -131,7 +130,7 @@ public class UserManagementUI {
 
             loadUsers(); // Refresh the table after editing a user
         } catch (Exception e) {
-            e.printStackTrace();
+            ExceptionHandler.handleException(e, "Failed to load the user modal. Please try again.");
         }
     }
 
@@ -151,53 +150,53 @@ public class UserManagementUI {
         }
     }
 
-    private void openEditUserModal() {
-        UserDto selectedUser = tableView.getSelectionModel().getSelectedItem();
-        if (selectedUser == null) {
-            showMessage("Warning", "Please select a user to edit.");
-            return;
-        }
+//    private void openEditUserModal() {
+//        UserDto selectedUser = tableView.getSelectionModel().getSelectedItem();
+//        if (selectedUser == null) {
+//            showMessage("Warning", "Please select a user to edit.");
+//            return;
+//        }
+//
+//        try {
+//            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/AddUserModal.fxml"));
+//            VBox modalRoot = loader.load();
+//
+//            AddUserModalController controller = loader.getController();
+//            controller.setUserService(userService);
+//            controller.setUser(selectedUser);
+//
+//            Stage modalStage = new Stage();
+//            modalStage.setTitle("Edit User");
+//            modalStage.setScene(new Scene(modalRoot));
+//            modalStage.showAndWait();
+//
+//            loadUsers(); // Refresh the table after editing a user
+//        } catch (Exception e) {
+//            ExceptionHandler.handleException(e, "Failed to load the user modal. Please try again.");
+//        }
+//    }
 
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/AddUserModal.fxml"));
-            VBox modalRoot = loader.load();
-
-            AddUserModalController controller = loader.getController();
-            controller.setUserService(userService);
-            controller.setUser(selectedUser);
-
-            Stage modalStage = new Stage();
-            modalStage.setTitle("Edit User");
-            modalStage.setScene(new Scene(modalRoot));
-            modalStage.showAndWait();
-
-            loadUsers(); // Refresh the table after editing a user
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void deleteUser() {
-        UserDto selectedUser = tableView.getSelectionModel().getSelectedItem();
-        if (selectedUser == null) {
-            showMessage("Warning", "Please select a user.");
-            return;
-        }
-        Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmation.setTitle("Delete User");
-        confirmation.setHeaderText("Delete selected user?");
-        confirmation.setContentText("User: " + selectedUser.getName());
-        if (confirmation.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-            try {
-                userService.deleteUserById(selectedUser.getId());
-                showMessage("Success", "User deleted successfully!");
-//                clearFields();
-                loadUsers();
-            } catch (Exception e) {
-                showMessage("Error", e.getMessage());
-            }
-        }
-    }
+//    private void deleteUser() {
+//        UserDto selectedUser = tableView.getSelectionModel().getSelectedItem();
+//        if (selectedUser == null) {
+//            showMessage("Warning", "Please select a user.");
+//            return;
+//        }
+//        Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
+//        confirmation.setTitle("Delete User");
+//        confirmation.setHeaderText("Delete selected user?");
+//        confirmation.setContentText("User: " + selectedUser.getName());
+//        if (confirmation.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+//            try {
+//                userService.deleteUserById(selectedUser.getId());
+//                showMessage("Success", "User deleted successfully!");
+////                clearFields();
+//                loadUsers();
+//            } catch (Exception e) {
+//                showMessage("Error", e.getMessage());
+//            }
+//        }
+//    }
 
     private void showMessage(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
