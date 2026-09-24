@@ -1,11 +1,15 @@
 package org.example.ui;
 
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.example.controller.AddUserModalController;
@@ -16,17 +20,18 @@ import org.example.util.ExceptionHandler;
 import java.util.List;
 
 public class UserManagementUI {
-
-
     private final UserService userService = new UserService(new org.example.dao.UserDAO());
     private final TableView<UserDto> tableView = new TableView<>();
-//    private final TextField nameField = new TextField();
-//    private final TextField emailField = new TextField();
+    private final TextField searchField = new TextField();
+
+    // Data list wrappers for search filtering
+    private final ObservableList<UserDto> userData = FXCollections.observableArrayList();
+    private final FilteredList<UserDto> filteredData = new FilteredList<>(userData, p -> true);
+
     private final VBox root;
 
     public UserManagementUI() {
-        // Initialize UI components
-
+        // 1. Configure Table Columns
         TableColumn<UserDto, String> idColumn = new TableColumn<>("ID");
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         idColumn.setVisible(false); // Hide the ID column
@@ -37,18 +42,45 @@ public class UserManagementUI {
         TableColumn<UserDto, String> emailColumn = new TableColumn<>("Email");
         emailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
 
-
         tableView.getColumns().addAll(idColumn, nameColumn, emailColumn);
 
-        // Initialize action column
+        // Add Actions Column (Edit/Delete)
         initializeActionColumn();
 
+        // 2. Setup Filtered & Sorted Data Binding
+        SortedList<UserDto> sortedData = new SortedList<>(filteredData);
+        sortedData.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedData);
+
+        // 3. Search Field Setup & Event Listener
+        searchField.setPromptText("Search by name or email...");
+        HBox.setHgrow(searchField, Priority.ALWAYS.ALWAYS); // Stretch search field
+
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            filteredData.setPredicate(user -> {
+                if (newValue == null || newValue.isBlank()) {
+                    return true;
+                }
+
+                String filter = newValue.toLowerCase().trim();
+
+                boolean matchName = user.getName() != null && user.getName().toLowerCase().contains(filter);
+                boolean matchEmail = user.getEmail() != null && user.getEmail().toLowerCase().contains(filter);
+
+                return matchName || matchEmail;
+            });
+        });
+
+        // 4. Buttons and Layout Assembly
         Button addButton = new Button("Add User");
         addButton.setOnAction(event -> openAddUserModal());
-        HBox buttonBox = new HBox(10, addButton);
 
-        root = new VBox(10, buttonBox, tableView);
+        HBox topBar = new HBox(10, searchField, addButton);
 
+        root = new VBox(10, topBar, tableView);
+        VBox.setVgrow(tableView, Priority.ALWAYS);
+
+        // 5. Load Initial Data
         loadUsers();
     }
 
@@ -58,7 +90,8 @@ public class UserManagementUI {
 
     private void loadUsers() {
         List<UserDto> users = userService.getAllUsers();
-        tableView.setItems(FXCollections.observableArrayList(users));
+        // Update ObservableList so FilteredList reacts automatically
+        userData.setAll(users);
     }
 
     private void openAddUserModal() {
@@ -74,7 +107,7 @@ public class UserManagementUI {
             modalStage.setScene(new Scene(modalRoot));
             modalStage.showAndWait();
 
-            loadUsers(); // Refresh the table after adding a user
+            loadUsers(); // Refresh table after modal closes
         } catch (Exception e) {
             ExceptionHandler.handleException(e, "Failed to load the user modal. Please try again.");
         }
@@ -128,7 +161,7 @@ public class UserManagementUI {
             modalStage.setScene(new Scene(modalRoot));
             modalStage.showAndWait();
 
-            loadUsers(); // Refresh the table after editing a user
+            loadUsers();
         } catch (Exception e) {
             ExceptionHandler.handleException(e, "Failed to load the user modal. Please try again.");
         }
@@ -149,54 +182,6 @@ public class UserManagementUI {
             }
         }
     }
-
-//    private void openEditUserModal() {
-//        UserDto selectedUser = tableView.getSelectionModel().getSelectedItem();
-//        if (selectedUser == null) {
-//            showMessage("Warning", "Please select a user to edit.");
-//            return;
-//        }
-//
-//        try {
-//            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/AddUserModal.fxml"));
-//            VBox modalRoot = loader.load();
-//
-//            AddUserModalController controller = loader.getController();
-//            controller.setUserService(userService);
-//            controller.setUser(selectedUser);
-//
-//            Stage modalStage = new Stage();
-//            modalStage.setTitle("Edit User");
-//            modalStage.setScene(new Scene(modalRoot));
-//            modalStage.showAndWait();
-//
-//            loadUsers(); // Refresh the table after editing a user
-//        } catch (Exception e) {
-//            ExceptionHandler.handleException(e, "Failed to load the user modal. Please try again.");
-//        }
-//    }
-
-//    private void deleteUser() {
-//        UserDto selectedUser = tableView.getSelectionModel().getSelectedItem();
-//        if (selectedUser == null) {
-//            showMessage("Warning", "Please select a user.");
-//            return;
-//        }
-//        Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
-//        confirmation.setTitle("Delete User");
-//        confirmation.setHeaderText("Delete selected user?");
-//        confirmation.setContentText("User: " + selectedUser.getName());
-//        if (confirmation.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-//            try {
-//                userService.deleteUserById(selectedUser.getId());
-//                showMessage("Success", "User deleted successfully!");
-////                clearFields();
-//                loadUsers();
-//            } catch (Exception e) {
-//                showMessage("Error", e.getMessage());
-//            }
-//        }
-//    }
 
     private void showMessage(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
