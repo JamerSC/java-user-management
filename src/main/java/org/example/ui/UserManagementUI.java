@@ -14,27 +14,28 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.example.controller.AddUserModalController;
 import org.example.dto.UserDto;
+import org.example.service.AuthService;
 import org.example.service.UserService;
 import org.example.util.ExceptionHandler;
 
 import java.util.List;
 
 public class UserManagementUI {
+
     private final UserService userService = new UserService(new org.example.dao.UserDAO());
     private final TableView<UserDto> tableView = new TableView<>();
     private final TextField searchField = new TextField();
 
-    // Data list wrappers for search filtering
     private final ObservableList<UserDto> userData = FXCollections.observableArrayList();
     private final FilteredList<UserDto> filteredData = new FilteredList<>(userData, p -> true);
 
     private final VBox root;
 
-    public UserManagementUI() {
+    public UserManagementUI(Stage primaryStage) {
         // 1. Configure Table Columns
         TableColumn<UserDto, String> idColumn = new TableColumn<>("ID");
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
-        idColumn.setVisible(false); // Hide the ID column
+        idColumn.setVisible(false);
 
         TableColumn<UserDto, String> nameColumn = new TableColumn<>("Name");
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -44,26 +45,22 @@ public class UserManagementUI {
 
         tableView.getColumns().addAll(idColumn, nameColumn, emailColumn);
 
-        // Add Actions Column (Edit/Delete)
         initializeActionColumn();
 
-        // 2. Setup Filtered & Sorted Data Binding
+        // 2. Data binding & Filtered list setup
         SortedList<UserDto> sortedData = new SortedList<>(filteredData);
         sortedData.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedData);
 
-        // 3. Search Field Setup & Event Listener
+        // 3. Search Filter Logic
         searchField.setPromptText("Search by name or email...");
-        HBox.setHgrow(searchField, Priority.ALWAYS.ALWAYS); // Stretch search field
+        HBox.setHgrow(searchField, Priority.ALWAYS);
 
         searchField.textProperty().addListener((observable, oldValue, newValue) -> {
             filteredData.setPredicate(user -> {
-                if (newValue == null || newValue.isBlank()) {
-                    return true;
-                }
+                if (newValue == null || newValue.isBlank()) return true;
 
                 String filter = newValue.toLowerCase().trim();
-
                 boolean matchName = user.getName() != null && user.getName().toLowerCase().contains(filter);
                 boolean matchEmail = user.getEmail() != null && user.getEmail().toLowerCase().contains(filter);
 
@@ -71,16 +68,30 @@ public class UserManagementUI {
             });
         });
 
-        // 4. Buttons and Layout Assembly
+        // 4. User Info Header & Logout Button
+        UserDto loggedInUser = AuthService.getCurrentUser();
+        String activeUserName = (loggedInUser != null) ? loggedInUser.getName() : "User";
+        Label userLabel = new Label("Logged in as: " + activeUserName);
+        userLabel.setStyle("-fx-font-weight: bold;");
+
+        Button logoutButton = new Button("Logout");
+        logoutButton.setStyle("-fx-background-color: #f44336; -fx-text-fill: white;");
+        logoutButton.setOnAction(e -> {
+            AuthService.logout();
+            LoginUI loginUI = new LoginUI(primaryStage);
+            primaryStage.getScene().setRoot(loginUI.getRoot());
+            primaryStage.setTitle("System Login");
+        });
+
         Button addButton = new Button("Add User");
         addButton.setOnAction(event -> openAddUserModal());
 
-        HBox topBar = new HBox(10, searchField, addButton);
+        HBox topBar = new HBox(10, userLabel, searchField, addButton, logoutButton);
+        topBar.setStyle("-fx-alignment: center-left;");
 
         root = new VBox(10, topBar, tableView);
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
-        // 5. Load Initial Data
         loadUsers();
     }
 
@@ -90,7 +101,6 @@ public class UserManagementUI {
 
     private void loadUsers() {
         List<UserDto> users = userService.getAllUsers();
-        // Update ObservableList so FilteredList reacts automatically
         userData.setAll(users);
     }
 
@@ -107,7 +117,7 @@ public class UserManagementUI {
             modalStage.setScene(new Scene(modalRoot));
             modalStage.showAndWait();
 
-            loadUsers(); // Refresh table after modal closes
+            loadUsers();
         } catch (Exception e) {
             ExceptionHandler.handleException(e, "Failed to load the user modal. Please try again.");
         }
