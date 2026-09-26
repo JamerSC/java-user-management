@@ -48,6 +48,28 @@ public class LoginUI {
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(30));
         root.setPrefSize(380, 260);
+
+        // Login screens usually look best small (e.g., $400 \times 300$),
+        // while management screens with data tables need much more space
+        // (e.g., $1000 \times 700$).
+
+        loginButton.setOnAction(e -> {
+            String username = usernameField.getText();
+            String password = passwordField.getText();
+
+            if (authService.login(username, password)) {
+                UserManagementUI userManagementUI = new UserManagementUI(primaryStage);
+                primaryStage.getScene().setRoot(userManagementUI.getRoot());
+                primaryStage.setTitle("User Management System");
+
+                // --- Resize Stage for the Main App View ---
+                primaryStage.setWidth(1000);  // Set new width
+                primaryStage.setHeight(700);  // Set new height
+                primaryStage.centerOnScreen(); // Recenter window
+            } else {
+                errorLabel.setText("Invalid credentials!");
+            }
+        });
     }
 
     public VBox getRoot() {

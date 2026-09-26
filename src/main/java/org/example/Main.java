@@ -24,6 +24,12 @@ public class Main extends Application {
         Scene scene = new Scene(loginUI.getRoot());
         primaryStage.setTitle("System Login");
         primaryStage.setScene(scene);
+
+        // --- Set Width and Height here ---
+//        primaryStage.setWidth(1000);  // Width in pixels
+//        primaryStage.setHeight(700);  // Height in pixels
+//        primaryStage.centerOnScreen(); // Center window on display
+
         primaryStage.show();
     }
 
